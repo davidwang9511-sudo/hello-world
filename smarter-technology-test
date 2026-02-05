@@ -1,0 +1,174 @@
+
+def sort(width, height, length, mass):
+    """
+    Sorts packages into stacks based on volume and mass criteria.
+    
+    This function determines whether a package is "bulky" (large volume or dimensions)
+    or "heavy" (significant mass), and routes it to the appropriate handling stack.
+    
+    Args:
+        width (int/float): Package width in centimeters
+        height (int/float): Package height in centimeters
+        length (int/float): Package length in centimeters
+        mass (int/float): Package mass in kilograms
+    
+    Returns:
+        str: Stack assignment - one of:
+            - 'STANDARD': Normal packages (not bulky and not heavy)
+            - 'SPECIAL': Packages requiring special handling (bulky OR heavy, but not both)
+            - 'REJECTED': Packages unsuitable for automated handling (both bulky AND heavy)
+    
+    Bulky Criteria:
+        - Volume >= 1,000,000 cm³ OR
+        - Any dimension >= 150 cm
+    
+    Heavy Criteria:
+        - Mass >= 20 kg
+    
+    Examples:
+        >>> sort(50, 50, 50, 10)
+        'STANDARD'
+        
+        >>> sort(150, 100, 100, 15)
+        'SPECIAL'
+        
+        >>> sort(150, 150, 150, 20)
+        'REJECTED'
+    """
+    # Calculate volume
+    volume = width * height * length
+    
+    # Determine if package is bulky
+    is_bulky = (volume >= 1_000_000) or (width >= 150 or height >= 150 or length >= 150)
+    
+    # Determine if package is heavy
+    is_heavy = mass >= 20
+    
+    # Determine stack based on criteria
+    if is_heavy and is_bulky:
+        return "REJECTED"
+    elif is_heavy or is_bulky:
+        return "SPECIAL"
+    else:
+        return "STANDARD"
+
+
+# ============================================================================
+# TEST SUITE
+# ============================================================================
+
+def run_tests():
+    """Run comprehensive test cases for the sort function."""
+    test_cases = [
+        # (width, height, length, mass, expected_result, description)
+        
+        # ===== STANDARD: Not bulky and not heavy =====
+        (50, 50, 50, 10, "STANDARD", "Small package, light mass"),
+        (99, 99, 99, 5, "STANDARD", "Medium package, volume < 1M, all dims < 150"),
+        (1, 1, 1, 0.5, "STANDARD", "Tiny package"),
+        (100, 100, 50, 10, "STANDARD", "All dimensions < 150, volume < 1M, light"),
+        (99, 99, 99, 19, "STANDARD", "Well below all thresholds"),
+        
+        # ===== SPECIAL: Heavy but not bulky =====
+        (50, 50, 50, 20, "SPECIAL", "Small package, exactly 20kg (heavy threshold)"),
+        (10, 10, 10, 100, "SPECIAL", "Very heavy but small (not bulky)"),
+        (99, 99, 99, 20, "SPECIAL", "Just under bulky threshold, but heavy"),
+        (50, 50, 50, 50, "SPECIAL", "Small volume, very heavy mass"),
+        
+        # ===== SPECIAL: Bulky but not heavy =====
+        (150, 50, 50, 10, "SPECIAL", "One dimension = 150cm (bulky by dimension)"),
+        (200, 50, 50, 5, "SPECIAL", "One dimension > 150cm (bulky by dimension)"),
+        (100, 100, 101, 1, "SPECIAL", "Volume > 1,000,000 (bulky by volume), light"),
+        (150, 150, 150, 10, "SPECIAL", "Multiple dimensions >= 150 (bulky), light"),
+        (1000, 1000, 1, 1, "SPECIAL", "Bulky by volume (1B), not heavy"),
+        
+        # ===== REJECTED: Both heavy and bulky =====
+        (150, 150, 150, 20, "REJECTED", "Large dimensions and heavy mass"),
+        (200, 200, 200, 20, "REJECTED", "Very large and very heavy"),
+        (100, 100, 150, 25, "REJECTED", "Bulky by dimension and heavy"),
+        (150, 50, 50, 30, "REJECTED", "Bulky by dimension and very heavy"),
+        (100, 100, 100, 20, "REJECTED", "Bulky by volume (1M) and heavy (20kg)"),
+        (500, 500, 500, 100, "REJECTED", "Extremely bulky and extremely heavy"),
+        
+        # ===== Edge cases =====
+        (0, 0, 0, 0, "STANDARD", "Zero dimensions and mass"),
+        (0.1, 0.1, 0.1, 0.1, "STANDARD", "Very small values"),
+        (150, 0, 0, 0, "SPECIAL", "One dimension at 150 threshold, others zero"),
+        (150.01, 50, 50, 10, "SPECIAL", "Just over dimension threshold"),
+        (99.99, 99.99, 99.99, 19.99, "STANDARD", "Just under all thresholds"),
+    ]
+    
+    passed = 0
+    failed = 0
+    failures = []
+    
+    print("=" * 80)
+    print("PACKAGE SORTING SYSTEM - TEST RESULTS")
+    print("=" * 80)
+    
+    for width, height, length, mass, expected, description in test_cases:
+        result = sort(width, height, length, mass)
+        status = "✓ PASS" if result == expected else "✗ FAIL"
+        
+        if result == expected:
+            passed += 1
+        else:
+            failed += 1
+            failures.append((description, width, height, length, mass, expected, result))
+        
+        print(f"\n{status}: {description}")
+        print(f"  Input: W={width}, H={height}, L={length}, M={mass}kg")
+        volume = width * height * length
+        print(f"  Volume: {volume:.0f} cm³")
+        print(f"  Expected: {expected}, Got: {result}")
+    
+    print("\n" + "=" * 80)
+    print(f"SUMMARY: {passed} passed, {failed} failed out of {len(test_cases)} tests")
+    print("=" * 80)
+    
+    if failures:
+        print("\nFAILURES:")
+        for desc, w, h, l, m, expected, result in failures:
+            print(f"  • {desc}: Expected {expected}, got {result}")
+    
+    return failed == 0
+
+
+def demo():
+    """Demonstrate the package sorting system with example packages."""
+    demo_packages = [
+        (50, 50, 50, 10, "Small light package"),
+        (150, 100, 100, 15, "Bulky package (dimension at limit)"),
+        (50, 50, 50, 25, "Heavy small package"),
+        (200, 200, 200, 30, "Large heavy package"),
+        (100, 100, 100, 1, "Bulky but light package"),
+        (75, 100, 80, 10, "Standard mid-size package"),
+    ]
+    
+    print("\n\nINTERACTIVE SORTING EXAMPLES:")
+    print("-" * 80)
+    
+    for width, height, length, mass, description in demo_packages:
+        result = sort(width, height, length, mass)
+        volume = width * height * length
+        is_bulky = (volume >= 1_000_000) or (width >= 150 or height >= 150 or length >= 150)
+        is_heavy = mass >= 20
+        
+        print(f"\n{description}")
+        print(f"  Dimensions: {width}×{height}×{length} cm (Volume: {volume:,.0f} cm³)")
+        print(f"  Mass: {mass} kg")
+        print(f"  Bulky: {is_bulky}, Heavy: {is_heavy}")
+        print(f"  → Stack: {result}")
+
+
+if __name__ == "__main__":
+    import sys
+    
+    # Run tests by default
+    success = run_tests()
+    
+    # Show demo examples
+    demo()
+    
+    # Exit with appropriate code
+    sys.exit(0 if success else 1)
